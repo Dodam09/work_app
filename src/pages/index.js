@@ -146,12 +146,16 @@ export default function WorkingApp() {
             autoNums = "_0" + eval(i + 1) + ".png";
           } else if (changedFiles[i].type === "image/jpeg") {
             autoNums = "_0" + eval(i + 1) + ".jpg";
+          } else if (changedFiles[i].type === "image/gif") {
+            autoNums = "_0" + eval(i + 1) + ".gif";
           }
         } else {
           if (changedFiles[i].type === "image/png") {
             autoNums = "_" + eval(i + 1) + ".png";
           } else if (changedFiles[i].type === "image/jpeg") {
             autoNums = "_" + eval(i + 1) + ".jpg";
+          } else if (changedFiles[i].type === "image/gif") {
+            autoNums = "_" + eval(i + 1) + ".gif";
           }
         }
         newChangedFilez.push(
