@@ -6,7 +6,7 @@ export default function WorkingApp() {
   const [files, setFiles] = useState();
   const [file, setFile] = useState();
   const [changedFiles, setChangedFiles] = useState();
-  const [DropFile, setDropFile] = useState([]);
+  const [DropFile, selectedFiles] = useState([]);
   const [newChangedFiles, setNewChangedFiles] = useState([]);
   const [newFileName, setNewFileName] = useState("detail");
   const [newFiles, setNewFiles] = useState();
@@ -14,19 +14,28 @@ export default function WorkingApp() {
   const fileInputRef = useRef(null);
   const [Drag, setDrag] = useState(false);
   const [Down, setDown] = useState(false);
+  // 드래그오버시 함수
   const handleDragOver = (e) => {
+    // 파일을 새창으로 열기 차단
     e.preventDefault();
+    // 버블링 차단
     e.stopPropagation();
+    // 드래그 오버 시 + 아이콘
     e.dataTransfer.dropEffect = "copy";
   };
-
+  // (1)드래그 드롭  파일 저장
   const handleDrop = (e) => {
+    // 드래그 완료
     setDrag(true);
+
+    //버블링 & 기본 동작 취소
     e.preventDefault();
     e.stopPropagation();
 
+    //드롭한 파일 배열로 변환
     const dropdedFile = Array.from(e.dataTransfer.files);
-    // const fileList = Array.from(e.target.files); // FileList 객체를 배열로 변환
+
+    // 배열 정렬 도구
     const sortedFiles = dropdedFile.sort((a, b) => {
       if (a.name < b.name) {
         return -1; // a가 b보다 앞에 위치해야 함
@@ -36,15 +45,16 @@ export default function WorkingApp() {
       }
       return 0; // 순서 변경 없음
     });
-    console.log("sortedFiles :", sortedFiles);
 
+    //파일 저장
     setFile(sortedFiles);
 
     const files = [];
     for (let i = 0; i < sortedFiles.length; i++) {
-      // console.log("file :", file);
-      // console.log("file[0] :", file[0]);
+      // 미리보기 url 생성
       const fileUrls = URL.createObjectURL(sortedFiles[i]);
+
+      // 파일 객체 생성
       files.push({
         fileName: sortedFiles[i].name,
         fileType: sortedFiles[i].type,
@@ -52,19 +62,13 @@ export default function WorkingApp() {
       });
     }
     setFiles(files);
-
-    // setDropFile([...dropdedFile]);
   };
-
-  const handleFileInputChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
-    setDropFile([...selectedFiles]);
-  };
-
+  // 드래그 존 클릭 시에도 업로드창 노출
   const handleClick = () => {
     fileInputRef.current.click();
   };
 
+  // (2)클릭 업로드 파일 저장
   const FileUploader = (e) => {
     const fileList = Array.from(e.target.files); // FileList 객체를 배열로 변환
     const sortedFiles = fileList.sort((a, b) => {
@@ -76,14 +80,11 @@ export default function WorkingApp() {
       }
       return 0; // 순서 변경 없음
     });
-    console.log("sortedFiles :", sortedFiles);
 
     setFile(sortedFiles);
 
     const files = [];
     for (let i = 0; i < sortedFiles.length; i++) {
-      // console.log("file :", file);
-      // console.log("file[0] :", file[0]);
       const fileUrls = URL.createObjectURL(sortedFiles[i]);
       files.push({
         fileName: sortedFiles[i].name,
@@ -93,33 +94,51 @@ export default function WorkingApp() {
     }
     setFiles(files);
   };
+  // 파일 선택으로 선택한 파일
+  const handleFileInputChange = (e) => {
+    const newSelectedFiles = Array.from(e.target.files);
+    selectedFiles([...newSelectedFiles]);
+  };
 
+  // 이름 변경한 파일 상태 저장
+  const FileChanger = () => {
+    setChangedFiles(file);
+    setDown(true);
+  };
+
+  // 압축하여 파일 다운로드
   const downloadZip = async () => {
     const zip = new JSZip();
 
     // 각 파일을 압축 파일에 추가
     zipFile.forEach((file) => {
       zip.file(
-        file.fileName, // zip 파일 이름 설정
-        fetch(file.fileUrl) // sortedFiles의 url을 서버에 전송
-          .then((res) => res.blob())
+        //파일명 설정
+        file.fileName,
+        //미리보기 url에서 실제 데이터 요청
+        fetch(file.fileUrl).then((res) => res.blob())
         // 결과를 zip하기 위해 blob 파일로 변환 필수
       );
     });
 
+    // zip파일 생성 -> blob 변환
     const content = await zip.generateAsync({ type: "blob" });
-    // 압축이 완료 될때까지 비동기 정지
 
+    // 생성된 zip파일 다운로드 링크 생성
     const downloadLink = URL.createObjectURL(content);
 
     // 완료된 압축파일 다운로드 링크 생성
+    // 다운로드용 a 링크 생성
     const a = document.createElement("a");
+    // 링크에 다운로드 링크 삽입
     a.href = downloadLink;
+    // 파일명
     a.download = "changed_files.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
+
   useEffect(() => {
     const newFilez = [];
     for (let i = 0; i < newChangedFiles.length; i++) {
@@ -136,12 +155,14 @@ export default function WorkingApp() {
   }, [newChangedFiles]);
 
   useEffect(() => {
+    // 파일체인져 눌렀을 때 실행
     if (changedFiles) {
-      console.log("changedFiles :", changedFiles);
       const newChangedFilez = [];
       let autoNums = "";
       for (let i = 0; i < changedFiles.length; i++) {
+        //파일 한자리수 일 때
         if (i < 9) {
+          // png, jpg, gif 구분
           if (changedFiles[i].type === "image/png") {
             autoNums = "_0" + eval(i + 1) + ".png";
           } else if (changedFiles[i].type === "image/jpeg") {
@@ -149,6 +170,7 @@ export default function WorkingApp() {
           } else if (changedFiles[i].type === "image/gif") {
             autoNums = "_0" + eval(i + 1) + ".gif";
           }
+          // 파일이 10번째 파일 부터
         } else {
           if (changedFiles[i].type === "image/png") {
             autoNums = "_" + eval(i + 1) + ".png";
@@ -159,6 +181,8 @@ export default function WorkingApp() {
           }
         }
         newChangedFilez.push(
+          //new File은 배열 인자(blob)를 받기 때문에 배열로 감싸서 인자에 전달
+          //기존 파일 데이터 + [사용자가 입력한 단어 + 자동생성 넘버링] + 기존 파일 타입
           new File([file[i]], newFileName + autoNums, {
             type: file[i].type,
           })
@@ -167,11 +191,6 @@ export default function WorkingApp() {
       setNewChangedFiles(newChangedFilez);
     }
   }, [changedFiles]);
-
-  const FileChanger = () => {
-    setChangedFiles(file);
-    setDown(true);
-  };
 
   return (
     <div
@@ -289,7 +308,6 @@ export default function WorkingApp() {
                       align-items: center;
                       width: 20%;
                       max-height: 25%;
-                      /* border: 1px solid black; */
                       position: relative;
                       box-sizing: border-box;
                       height: 16vw;
@@ -300,7 +318,6 @@ export default function WorkingApp() {
                         top: 0;
                         text-align: center;
                         background-color: black;
-                        /* opacity: 0.5; */
                         color: white;
                         width: 90%;
                         font-size: 0.8em;
@@ -323,9 +340,6 @@ export default function WorkingApp() {
                       }
                     `}
                   >
-                    {/* <p>{index}</p> */}
-                    {/* <p>{files.fileType}</p>
-                    <p>{files.fileUrls}</p> */}
                     <p>{files.fileName}</p>
                     <a href={files.fileUrls} download={files.fileName}>
                       <img src={files.fileUrls} />
@@ -354,7 +368,6 @@ export default function WorkingApp() {
                 align-items: center;
                 flex-direction: column-reverse;
                 font-weight: bold;
-                /* height: 16vw; */
                 max-height: 200px;
                 max-width: 900px;
                 min-width: 265px;
@@ -368,7 +381,6 @@ export default function WorkingApp() {
                   }
                 }
                 @media (max-width: 590px) {
-                  /* height: 26vw; */
                 }
               }
             `}
@@ -381,10 +393,7 @@ export default function WorkingApp() {
               className={css``}
             >
               Drag Your Files
-              <a
-                // href="https://www.flaticon.com/kr/free-icons/-"
-                title="위쪽 화살표 아이콘"
-              >
+              <a title="위쪽 화살표 아이콘">
                 <img
                   src="/images/free-icon-upload-4939937.png"
                   alt="Your Image"
@@ -395,9 +404,6 @@ export default function WorkingApp() {
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
-              onClick={(e) => {
-                e.preventDefault();
-              }}
               multiple
               style={{ display: "none" }}
             />
@@ -485,7 +491,6 @@ export default function WorkingApp() {
                       top: 0;
                       text-align: center;
                       background-color: black;
-                      /* opacity: 0.5; */
                       color: white;
                       width: 90%;
                       font-size: 0.8em;
