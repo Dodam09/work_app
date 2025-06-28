@@ -14,7 +14,7 @@
 
 ## 🖥️ 데모
 
-> 배포 링크나 데모 이미지를 추가하세요.
+👉 [배포된 웹 앱 바로가기](https://work-app-lac.vercel.app/)
 
 ---
 
@@ -27,11 +27,19 @@
 
 ---
 
-## 📦 설치 및 실행
+## 📦 설치, 실행 및 사용 방법
 
 ```bash
+# 1) 프로젝트 클론 후 설치
 git clone https://github.com/Dodam09/work_app.git
 cd work_app
 npm install
+
+# 2) 로컬 서버 실행
 npm run dev
+
+# 3) 사용 방법
+# - 파일을 드래그하거나 업로드 버튼을 클릭해 파일을 선택합니다.
+# - 원하는 접두어를 입력 후 일괄변경 버튼을 클릭합니다.
+# - 하단에 변경된 이미지가 표시되면 File Download 버튼으로 zip 파일을 받을 수 있습니다.
 ```
